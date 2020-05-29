@@ -47,11 +47,16 @@ namespace ReportGenerator
 
         public ReportEngineLogic(IReport report)
         {
+            // Report property is filled with User's data
             Report = report;
+
+            // Checks for null in DateTime array, and replaces it with an empty array if it is null
             if(Report.ColumnsToTreatAsDateTime == null)
             {
                 Report.ColumnsToTreatAsDateTime = new int[0]; 
             }
+
+            // Creates document construction components
             CreateDocumentManagementComponents(); 
         }
 
@@ -67,10 +72,15 @@ namespace ReportGenerator
         {
             try
             {
+                // Generate and add header
                 HeaderGenerator();
+                // Generate and add body content
                 AddBodyContent();
+                // Generate and add 'end-of-record' indicator
                 AddEndOfRecordIndicator(); 
+                // Close the main document
                 MainPDFDocument.Close(); 
+                // Return the constructed report's file path to the caller
                 return ConstructFileName();
             }
             catch (Exception ex)
@@ -89,9 +99,21 @@ namespace ReportGenerator
         /// </summary>
         private void CreateDocumentManagementComponents()
         {
+            // Creates main PDF document container and assigns a new writer
+            // The writer takes in the path that will be used to save the finalized document
             MainPDFDocument = new PdfDocument(new PdfWriter(ConstructFileName()));
+
+            // Set the page size to US Letter
+            // Changing this value will alter the output page size of the final PDF
             MainPDFDocument.SetDefaultPageSize(PageSize.LETTER.Rotate()); 
+
+            // Creates a new instance of a document which will hold the report components
             MainDocument = new Document(MainPDFDocument);
+
+            // Set main document margin properties
+            // NOTE: Top margin is left at default to give clearance for hole punches
+            // add a margin setting here if you would like to adjust the top margin
+            // MainDocument.SetTopMargin(10); 
             MainDocument.SetLeftMargin(10);
             MainDocument.SetRightMargin(10);
             MainDocument.SetBottomMargin(10); 
@@ -113,10 +135,19 @@ namespace ReportGenerator
         {
             if (Report.UseReportDate)
             {
+                // Creates a new stringbuilder which will perform construction of t he header
                 StringBuilder sb = new StringBuilder();
+
+                // Appends existing header text to the stringbuilder
                 sb.Append(Report.HeaderText);
+
+                // Appends a blank line that will sit between existing text and the date
                 sb.AppendLine();
+
+                // Appends the date of the report
                 sb.AppendLine("Date of Report: " + DateTime.Today.ToShortDateString());
+
+                // Replaces the original header text with one now containing the report date
                 Report.HeaderText = sb.ToString();
             }
         }
@@ -212,6 +243,10 @@ namespace ReportGenerator
                     CellContent.SetFontSize(8);
                     CellContent.SetHorizontalAlignment(HorizontalAlignment.LEFT);
 
+                    // If particular column is indicated in the Report's ColumnsToTreatAsDateTime array
+                    // Attempt to parse column as a DateTime, if fails, take value as is
+                    // NOTE: This operation will always default to raw data if the column is not
+                    // indicated in the array
                     if (Report.ColumnsToTreatAsDateTime.Contains(i))
                     {
                         DateTime outputDateTime;
@@ -228,6 +263,7 @@ namespace ReportGenerator
                             BodyContent.AddCell(CellContent); 
                         }
                     }
+                    // Default if the column is not listed in the DateTime checking array
                     else
                     {
                         CellContentText.Add(dr[i].ToString());
@@ -241,6 +277,9 @@ namespace ReportGenerator
             MainDocument.Add(BodyContent);
         }
 
+        /// <summary>
+        /// Adds end of record indicator to the end of the report 
+        /// </summary>
         private void AddEndOfRecordIndicator()
         {
             // Adds END OF RECORD statement to the end of the document
