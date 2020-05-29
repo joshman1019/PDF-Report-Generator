@@ -91,7 +91,10 @@ namespace ReportGenerator
         {
             MainPDFDocument = new PdfDocument(new PdfWriter(ConstructFileName()));
             MainPDFDocument.SetDefaultPageSize(PageSize.LETTER.Rotate()); 
-            MainDocument = new Document(MainPDFDocument); 
+            MainDocument = new Document(MainPDFDocument);
+            MainDocument.SetLeftMargin(10);
+            MainDocument.SetRightMargin(10);
+            MainDocument.SetBottomMargin(10); 
         }
 
         /// <summary>
